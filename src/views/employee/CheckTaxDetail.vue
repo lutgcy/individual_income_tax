@@ -1,34 +1,10 @@
 <template>
   <div class="app-container">
-    <el-form ref='searchForm' :inline="true" :model="searchFromData">
-      <el-form-item
-        prop="empId"
-        label="员工编号"
-        size="medium"
-
-      >
-        <el-input
-          v-model="searchFromData.empId"
-          size="small"
-          placeholder="请输入员工编号"
-          clearable
-          style="width: 240px"
-        />
-      </el-form-item>
-      <el-form-item prop="empName" label="员工姓名" size="medium">
-        <el-input
-          v-model="searchFromData.empName"
-          size="small"
-          placeholder="请输入员工姓名"
-          clearable
-          style="width: 240px"
-        />
-      </el-form-item>
-
+    <el-form ref="searchForm" :inline="true" :model="searchFromData">
       <el-form-item prop="yearOnly" label="选择年份" size="medium">
         <el-date-picker
-          style="margin-right: 10px"
           v-model="searchFromData.yearOnly"
+          style="margin-right: 10px"
           type="year"
           size="small"
           clearable
@@ -38,13 +14,13 @@
       </el-form-item>
 
       <el-form-item prop="onlyMonth" label="选择月份" size="medium">
-        <el-select clearable v-model="searchFromData.onlyMonth" placeholder="请选择">
+        <el-select v-model="searchFromData.onlyMonth" clearable placeholder="请选择">
           <el-option
             v-for="item in monthOptions"
             :key="item.value"
             :label="item.label"
-            :value="item.value">
-          </el-option>
+            :value="item.value"
+          />
         </el-select>
       </el-form-item>
 
@@ -55,7 +31,7 @@
 
     </el-form>
     <el-row>
-      <el-button plain type="primary" icon="el-icon-plus" size="mini" @click="generate">重新生成专项扣除数据</el-button>
+      <el-button plain type="primary" icon="el-icon-plus" size="mini" @click="generate">重新生成纳税数据</el-button>
       <el-button plain type="warning" icon="el-icon-document" size="mini">导出当前页</el-button>
       <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">Export All</el-button>
     </el-row>
@@ -70,82 +46,37 @@
       style="width: 100%; margin: 15px auto;"
       :header-cell-style="{background:'#EBEEF5',color:'#606266',textAlign: 'center'}"
       :cell-style="{ textAlign: 'center' }"
-      border
       highlight-current-row
       show-header
     >
       <el-table-column
         prop="emp_id"
         label="员工编号"
-        width="80"
       />
 
       <el-table-column
         prop="emp_name"
         label="员工姓名"
-        width="100"
       />
 
       <el-table-column
-        prop="special_year"
+        prop="tax_year"
         label="年份"
-        width="100"
       />
 
       <el-table-column
-        prop="special_month"
+        prop="tax_month"
         label="月份"
-        width="100"
       />
 
-      <el-table-column label="个人（元/单位）">
-        <el-table-column
-          label="养老保险"
-          prop="per_old"
-        />
-        <el-table-column
-          label="医疗保险"
-          prop="per_medical"
-        />
-        <el-table-column
-          label="失业保险"
-          prop="per_fire"
-        />
-        <el-table-column
-          label="住房公积金"
-          prop="per_house"
-        />
-      </el-table-column>
-
       <el-table-column
-        label="企业（元/单位）"
-      >
-        <el-table-column
-          label="工伤保险"
-          prop="comp_hurt"
-        />
-        <el-table-column
-          label="生育保险"
-          prop="comp_birth"
-        />
-        <el-table-column
-          label="养老保险"
-          prop="comp_old"
-        />
-        <el-table-column
-          label="医疗保险"
-          prop="comp_medical"
-        />
-        <el-table-column
-          label="失业保险"
-          prop="comp_fire"
-        />
-        <el-table-column
-          label="住房公积金"
-          prop="comp_house"
-        />
-      </el-table-column>
-
+        label="应纳税所得额"
+        prop="taxable_income"
+      />
+      <el-table-column
+        label="应纳税额"
+        prop="tax_money"
+      />
     </el-table>
 
     <!--    分页-->
@@ -167,10 +98,9 @@
 </template>
 
 <script>
-import { generate, searchSpecial } from '@/api/special'
+import {generateTax, searchTaxDetail} from '@/api/tax'
 
 export default {
-  name: 'Special',
   data() {
     return {
       listQuery: {
@@ -226,9 +156,6 @@ export default {
       }]
     }
   },
-  created() {
-    this.getSpecialsList(this.listQuery.pageNum, this.listQuery.pageSize)
-  },
   watch: {
     searchFromData: {
       handler: function() {
@@ -238,15 +165,12 @@ export default {
       // immediate: true,  //立即执行
     }
   },
+  created() {
+    this.getTaxDetailList(this.listQuery.pageNum, this.listQuery.pageSize)
+  },
   methods: {
     search() {
       const condition = {}
-      if (this.searchFromData.empId) {
-        condition['empId'] = this.searchFromData.empId
-      }
-      if (this.searchFromData.empName) {
-        condition['empName'] = this.searchFromData.empName
-      }
       if (this.searchFromData.yearOnly) {
         condition['yearOnly'] = this.searchFromData.yearOnly
       }
@@ -258,22 +182,23 @@ export default {
         this.listQuery.pageNum = 1
         this.searchChange = false
       }
-      searchSpecial(condition, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+      searchTaxDetail(condition, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
         this.tableData = response.data.list
+        console.log(response)
         this.listQuery.total = response.data.total
         this.loading = false
       }).catch(() => {
         this.loading = false
       })
     },
-    getSpecialsList(pageNum, pageSize) {
+    getTaxDetailList(pageNum, pageSize) {
       this.search(pageNum, pageSize)
     },
     pageChange() {
-      this.getSpecialsList(this.listQuery.pageNum, this.listQuery.pageSize)
+      this.getTaxDetailList(this.listQuery.pageNum, this.listQuery.pageSize)
     },
     sizeChange(pageSize) {
-      this.getSpecialsList(1, pageSize)
+      this.getTaxDetailList(1, pageSize)
     },
     generate() {
       this.$confirm('将重新生成数据, 是否继续?', '提示', {
@@ -282,9 +207,9 @@ export default {
         type: 'warning'
       }).then(() => {
         this.loading = true
-        generate(this.$store.getters.token).then(() => {
+        generateTax(this.$store.getters.token).then(() => {
           this.loading = false
-          this.getSpecialsList(this.listQuery.pageNum, this.listQuery.pageSize)
+          this.getTaxDetailList(this.listQuery.pageNum, this.listQuery.pageSize)
         }).catch()
       }).catch(() => {
         this.$message({

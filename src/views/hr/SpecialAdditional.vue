@@ -264,11 +264,11 @@ export default {
   },
   methods: {
     setZero() {
-      // setZero().then(() => {
-      //
-      // }).catch(() => {
-      //   alert('error')
-      // })
+      setZero().then(() => {
+
+      }).catch(() => {
+        alert('error')
+      })
     },
     selectChange() {
       this.search()

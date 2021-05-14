@@ -225,14 +225,14 @@ export const asyncRoutes = [
     redirect: '/hr/freetax',
     name: 'hrTax',
     meta: {
-      title: '免税管理',
+      title: '纳税管理',
       icon: 'el-icon-money',
       roles: ['hr']
     },
     children: [
       {
         path: 'checkdetail',
-        component: () => import('@/views/hr/tax/CheckDetail'),
+        component: () => import('@/views/hr/CheckTaxDetail'),
         name: 'hrCheckDetail',
         meta: { title: '纳税记录', icon: 'el-icon-money' }
       }
@@ -365,7 +365,7 @@ export const asyncRoutes = [
       // },
       {
         path: 'checkdetail',
-        component: () => import('@/views/employee/tax/CheckDetail'),
+        component: () => import('@/views/employee/CheckTaxDetail'),
         name: 'CheckDetail',
         meta: { title: '纳税记录', icon: 'el-icon-money' }
       }
