@@ -57,7 +57,7 @@
     <el-row>
       <el-button plain type="primary" icon="el-icon-plus" size="mini" @click="generate">重新生成专项扣除数据</el-button>
       <el-button plain type="warning" icon="el-icon-document" size="mini">导出当前页</el-button>
-      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">Export All</el-button>
+      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">导出所有页</el-button>
     </el-row>
     <el-table
       ref="multipleTable"

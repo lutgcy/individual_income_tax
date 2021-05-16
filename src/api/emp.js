@@ -8,6 +8,14 @@ export function getEmps(pageNum, pageSize, token) {
   })
 }
 
+export function searchEmployee(condition, pageNum, pageSize, token) {
+  return request({
+    url: '/api/employee/search',
+    method: 'get',
+    params: { condition, pageNum, pageSize, token }
+  })
+}
+
 export function addEmp(data) {
   return request({
     url: '/api/emp',

@@ -1,58 +1,73 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true">
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
+    <el-form ref="searchForm" :inline="true" :model="searchFromData">
+      <el-form-item
+        prop="empId"
+        label="员工编号"
+        size="medium"
+      >
+        <el-input
+          v-model="searchFromData.empId"
+          size="small"
+          placeholder="请输入员工编号"
+          clearable
+          style="width: 240px"
+        />
       </el-form-item>
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
-      </el-form-item>
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
+      <el-form-item prop="empName" label="员工姓名" size="medium">
+        <el-input
+          v-model="searchFromData.empName"
+          size="small"
+          placeholder="请输入员工姓名"
+          clearable
+          style="width: 240px"
+        />
       </el-form-item>
 
-      <el-form-item>
-        <div class="block">
-          <span class="demonstration">带快捷选项</span>
-          <el-date-picker
-            v-model="date_value"
-            type="daterange"
-            align="right"
-            unlink-panels
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :picker-options="pickerOptions"
+      <el-form-item prop="yearOnly" label="选择年份" size="medium">
+        <el-date-picker
+          v-model="searchFromData.yearOnly"
+          style="margin-right: 10px"
+          type="year"
+          size="small"
+          clearable
+          placeholder="选择年"
+          value-format="yyyy"
+        />
+      </el-form-item>
+
+      <el-form-item prop="onlyMonth" label="选择月份" size="medium">
+        <el-select v-model="searchFromData.onlyMonth" clearable placeholder="请选择">
+          <el-option
+            v-for="item in monthOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
-        </div>
+        </el-select>
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini">重置</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="search">查找</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetForm('searchForm')">重置</el-button>
       </el-form-item>
+
     </el-form>
     <el-row>
-<!--      <el-select placeholder="请选择年份">-->
-<!--      </el-select>-->
-      <el-date-picker
-        style="margin-right: 10px"
-        v-model="month"
-        type="month"
-        size="small"
-        placeholder="选择月">
-      </el-date-picker>
-      <el-button :disabled="updateButtonDisable" type="success" icon="el-icon-search" size="mini" @click="alterOnOpen">查询</el-button>
-      <el-button type="primary" icon="el-icon-plus" size="mini" @click="onOpen">生成工资表</el-button>
-      <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
-      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">Export All</el-button>
-      <el-button :disabled="true" type="danger" icon="el-icon-document" size="mini" @click="handleDownload">Export Selected</el-button>
+<!--      <el-button plain type="primary" icon="el-icon-refresh-left" size="mini" @click="initNextSalary">初始化下月工资</el-button>-->
+      <el-button plain type="success" icon="el-icon-plus" size="mini" @click="generateNextMonth">生成下月工资</el-button>
+      <el-button plain type="danger" icon="el-icon-delete" size="mini" @click="deleteLastMonth">删除上月数据</el-button>
+<!--      <el-button plain type="primary" icon="el-icon-refresh-right" size="mini" @click="generate">重新生成所有数据</el-button>-->
+      <el-button plain type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
+      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
     </el-row>
-
-    <!--    表格内容主体-->
     <el-table
       ref="multipleTable"
-      :data="tableDatawwwwwwwwwwwwwwwwww"
+      v-loading="loading"
+      element-loading-text="拼命加载中"
+      element-loading-spinner="el-icon-loading"
+      element-loading-background="rgba(0, 0, 0, 0.7)"
+      :data="tableData"
       tooltip-effect="dark"
       style="width: 100%; margin: 15px auto;"
       :header-cell-style="{background:'#EBEEF5',color:'#606266',textAlign: 'center'}"
@@ -60,92 +75,110 @@
       border
       highlight-current-row
       show-header
-      @select="handleSelect"
-      @select-all="handleSelectAll"
     >
-      <el-table-column
-        type="selection"
-        width="55"
-      />
-
       <el-table-column
         prop="emp_id"
         label="员工编号"
-        width="60"
-      />
-
-      <el-table-column
-        prop="username"
-        label="用户名"
-        width="100"
-      />
-
-      <el-table-column
-        prop="emp_name"
-        label="姓名"
         width="80"
       />
 
       <el-table-column
-        prop="emp_sex"
-        label="性别"
+        prop="emp_name"
+        label="员工姓名"
+      />
+
+<!--      <el-table-column-->
+<!--        prop="post_name"-->
+<!--        label=" 岗位"-->
+<!--        width="100"-->
+<!--      />-->
+
+<!--      <el-table-column-->
+<!--        prop="dept_name"-->
+<!--        label="部门"-->
+<!--        width="100"-->
+<!--      />-->
+
+      <el-table-column
+        prop="salary_year"
+        label="年份"
+      />
+
+      <el-table-column
+        prop="salary_month"
+        label="月份"
         width="60"
       />
 
-      <el-table-column
-        prop="emp_email"
-        label="邮箱"
-        width="160"
-      />
+      <el-table-column label="应发工资">
+        <el-table-column
+          label="基本工资"
+          prop="base_salary"
+        />
+        <el-table-column
+          label="岗位工资"
+          prop="post_salary"
+        />
+      </el-table-column>
+      <el-table-column label="专项扣除">
+        <el-table-column
+          label="养老保险"
+          prop="per_old"
+        />
+        <el-table-column
+          label="医疗保险"
+          prop="per_medical"
+        />
+        <el-table-column
+          label="失业保险"
+          prop="per_fire"
+        />
+        <el-table-column
+          label="住房公积金"
+          prop="per_house"
+        />
+      </el-table-column>
 
       <el-table-column
-        prop="emp_telephone"
-        label="电话"
-        width="120"
-      />
-
+        label="专项附加扣除"
+      >
+        <el-table-column
+          label="子女教育"
+          prop="child_edu"
+        />
+        <el-table-column
+          label="继续教育"
+          prop="continue_edu"
+        />
+        <el-table-column
+          label="住房租金"
+          prop="rent"
+        />
+        <el-table-column
+          label="住房贷款利息"
+          prop="credit"
+        />
+        <el-table-column
+          label="赡养老人"
+          prop="old_man"
+        />
+        <el-table-column
+          label="大病医疗"
+          prop="big_sick"
+        />
+      </el-table-column>
       <el-table-column
-        prop="emp_address"
-        label="住址"
-        width="260"
+        label="应纳税所得额"
+        prop="taxable_income"
       />
-
       <el-table-column
-        prop="emp_idnumber"
-        label="身份证号"
-        width="165"
+        label="个人所得税"
+        prop="tax_money"
       />
-
       <el-table-column
-        prop="emp_bank"
-        label="银行卡号"
-        width="150"
+        label="实发工资"
+        prop="real_salary"
       />
-
-      <el-table-column
-        prop="emp_hiredate"
-        label="入职时间"
-        width="100"
-      />
-
-      <el-table-column
-        prop="dept_name"
-        label="所属部门"
-        width="100"
-      />
-
-      <el-table-column
-        prop="post_name"
-        label="岗位"
-        width="100"
-      />
-
-      <el-table-column
-        prop="emp_introduction"
-        label="个人简介"
-        show-overflow-tooltip
-      />
-
     </el-table>
 
     <!--    分页-->
@@ -163,345 +196,16 @@
       />
     </template>
 
-    <!--添加dialog-->
-    <template>
-      <div>
-        <el-dialog :visible.sync="dialogFormVisible" v-bind="$attrs" title="添加员工" width="42%" v-on="$listeners" @close="onClose">
-          <el-form ref="ruleForm" :model="formData" :rules="rules" size="small" label-width="100px" :status-icon="true">
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="用户名" prop="username">
-                  <el-input
-                    v-model="formData.username"
-                    placeholder="请输入用户名"
-                    :maxlength="15"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="姓名" prop="empName">
-                  <el-input
-                    v-model="formData.empName"
-                    placeholder="请输入姓名"
-                    :maxlength="15"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="25">
-              <el-col :span="12">
-                <el-form-item label="性别" prop="empSex">
-                  <el-select v-model="formData.empSex" placeholder="请择选性别" clearable :style="{width: '90%'}">
-                    <el-option
-                      v-for="(item, index) in empSexOptions"
-                      :key="index"
-                      :label="item.label"
-                      :value="item.value"
-                      :disabled="item.disabled"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="邮箱" prop="empEmail">
-                  <el-input v-model="formData.empEmail" placeholder="请输入邮箱" clearable :style="{width: '90%'}" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="手机号码" prop="empTelephone">
-                  <el-input
-                    v-model="formData.empTelephone"
-                    placeholder="请输入手机号码"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="住址" prop="empAddress">
-                  <el-input v-model="formData.empAddress" placeholder="请输入住址" clearable :style="{width: '90%'}" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="身份证号" prop="empIdnumber">
-                  <el-input
-                    v-model="formData.empIdnumber"
-                    placeholder="请输入身份证号"
-                    :maxlength="18"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="银行卡号" prop="empBank">
-                  <el-input
-                    v-model="formData.empBank"
-                    placeholder="请输入银行卡号"
-                    :maxlength="20"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="入职时间" prop="empHiredate">
-                  <el-date-picker
-                    v-model="formData.empHiredate"
-                    format="yyyy-MM-dd"
-                    value-format="yyyy-MM-dd"
-                    :style="{width: '90%'}"
-                    placeholder="请选择入职时间"
-                    clearable
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="所属部门" prop="deptId">
-                  <el-select
-                    v-model="formData.deptId"
-                    placeholder="请选择所属部门"
-                    filterable
-                    clearable
-                    :style="{width: '90%'}"
-                  >
-                    <el-option
-                      v-for="item in deptIdOptions"
-                      :key="item.dept_id"
-                      :label="item.dept_name"
-                      :value="item.dept_id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="岗位" prop="postId">
-                  <el-select
-                    v-model="formData.postId"
-                    placeholder="请选择岗位"
-                    filterable
-                    clearable
-                    :style="{width: '90%'}"
-                  >
-                    <el-option
-                      v-for="item in postIdOptions"
-                      :key="item.post_id"
-                      :label="item.post_name"
-                      :value="item.post_id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-form-item label="个人简介" prop="empIntroduction">
-                <el-input
-                  v-model="formData.empIntroduction"
-                  type="textarea"
-                  placeholder="请输入个人简介"
-                  :maxlength="1024"
-                  show-word-limit
-                  :autosize="{minRows: 3, maxRows: 5}"
-                  :style="{width: '95%'}"
-                />
-              </el-form-item>
-            </el-row>
-            <el-row>
-              <el-form-item label-width="300px">
-                <el-button type="primary" size="small" @click="submitForm('ruleForm')">立即添加</el-button>
-                <el-button plain type="warning" size="small" @click="resetForm('ruleForm')">清空表单</el-button>
-              </el-form-item>
-            </el-row>
-          </el-form>
-        </el-dialog>
-      </div>
-    </template>
-    <!--修改dialog-->
-    <template>
-      <div>
-        <el-dialog :visible.sync="alterDialog" v-bind="$attrs" title="修改信息" width="42%" v-on="$listeners" @close="onClose">
-          <el-form ref="ruleForm" :model="alterFormData" :rules="rules" size="small" label-width="100px" :status-icon="true">
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="用户名" prop="username">
-                  <el-input
-                    v-model="alterFormData.username"
-                    placeholder="请输入用户名"
-                    :maxlength="15"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="姓名" prop="empName">
-                  <el-input
-                    v-model="alterFormData.empName"
-                    placeholder="请输入姓名"
-                    :maxlength="15"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="25">
-              <el-col :span="12">
-                <el-form-item label="性别" prop="empSex">
-                  <el-select v-model="alterFormData.empSex" placeholder="请择选性别" clearable :style="{width: '90%'}">
-                    <el-option
-                      v-for="(item, index) in empSexOptions"
-                      :key="index"
-                      :label="item.label"
-                      :value="item.value"
-                      :disabled="item.disabled"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="邮箱" prop="empEmail">
-                  <el-input v-model="alterFormData.empEmail" placeholder="请输入邮箱" clearable :style="{width: '90%'}" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="手机号码" prop="empTelephone">
-                  <el-input
-                    v-model="alterFormData.empTelephone"
-                    placeholder="请输入手机号码"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="住址" prop="empAddress">
-                  <el-input v-model="alterFormData.empAddress" placeholder="请输入住址" clearable :style="{width: '90%'}" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="身份证号" prop="empIdnumber">
-                  <el-input
-                    v-model="alterFormData.empIdnumber"
-                    placeholder="请输入身份证号"
-                    :maxlength="18"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="银行卡号" prop="empBank">
-                  <el-input
-                    v-model="alterFormData.empBank"
-                    placeholder="请输入银行卡号"
-                    :maxlength="20"
-                    clearable
-                    :style="{width: '90%'}"
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="入职时间" prop="empHiredate">
-                  <el-date-picker
-                    v-model="alterFormData.empHiredate"
-                    format="yyyy-MM-dd"
-                    value-format="yyyy-MM-dd"
-                    :style="{width: '90%'}"
-                    placeholder="请选择入职时间"
-                    clearable
-                  />
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-col :span="12">
-                <el-form-item label="所属部门" prop="deptId">
-                  <el-select
-                    v-model="alterFormData.deptId"
-                    placeholder="请选择所属部门"
-                    filterable
-                    clearable
-                    :style="{width: '90%'}"
-                  >
-                    <el-option
-                      v-for="item in deptIdOptions"
-                      :key="item.dept_id"
-                      :label="item.dept_name"
-                      :value="item.dept_id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-              <el-col :span="12">
-                <el-form-item label="岗位" prop="postId">
-                  <el-select
-                    v-model="alterFormData.postId"
-                    placeholder="请选择岗位"
-                    filterable
-                    clearable
-                    :style="{width: '90%'}"
-                  >
-                    <el-option
-                      v-for="item in postIdOptions"
-                      :key="item.post_id"
-                      :label="item.post_name"
-                      :value="item.post_id"
-                    />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row :gutter="15">
-              <el-form-item label="个人简介" prop="empIntroduction">
-                <el-input
-                  v-model="alterFormData.empIntroduction"
-                  type="textarea"
-                  placeholder="请输入个人简介"
-                  :maxlength="1024"
-                  show-word-limit
-                  :autosize="{minRows: 3, maxRows: 5}"
-                  :style="{width: '95%'}"
-                />
-              </el-form-item>
-            </el-row>
-            <el-row>
-              <el-form-item label-width="300px">
-                <el-button type="primary" size="small" @click="alterRuleForm('ruleForm')">立即修改</el-button>
-                <el-button plain type="warning" size="small" @click="resetForm('ruleForm')">重置表单</el-button>
-              </el-form-item>
-            </el-row>
-          </el-form>
-        </el-dialog>
-      </div>
-    </template>
   </div>
 </template>
 
 <script>
-import { addEmp, deleteEmp, getAllDeptIdAndName, getAllPostIdAndName, getEmps, updateEmp } from '@/api/emp'
-// import Moment from 'moment'
+import { deleteLastSalary, generateNextSalary, generateSalary, searchSalary } from '@/api/salary'
+import XLSX from 'xlsx'
+import { openDownloadDialog, sheet2blob } from '@/utils/myexcel'
 
 export default {
-  components: {},
+  name: 'Special',
   data() {
     return {
       listQuery: {
@@ -510,213 +214,112 @@ export default {
         pageSize: 10
       },
       tableData: [],
-      pickerOptions: {
-        shortcuts: [{
-          text: '最近一周',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
-            picker.$emit('pick', [start, end])
-          }
-        }, {
-          text: '最近一个月',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
-            picker.$emit('pick', [start, end])
-          }
-        }, {
-          text: '最近三个月',
-          onClick(picker) {
-            const end = new Date()
-            const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
-            picker.$emit('pick', [start, end])
-          }
-        }]
-      },
-      month: undefined,
-      date_value: '',
-      dialogFormVisible: false, // 添加对话框
-      alterDialog: false, // 修改对话框
-      updateButtonDisable: true,
-      deleteButtonDisable: true,
-      delPrimaryKeySet: [],
-      formData: {
-        username: undefined,
-        empName: undefined,
-        empSex: undefined,
-        empEmail: undefined,
-        empTelephone: undefined,
-        empAddress: '',
-        empIdnumber: undefined,
-        empBank: undefined,
-        empHiredate: '',
-        deptId: undefined,
-        postId: undefined,
-        empIntroduction: undefined
-      },
-      alterFormData: {
+      searchFromData: {
         empId: undefined,
-        username: undefined,
         empName: undefined,
-        empSex: undefined,
-        empEmail: undefined,
-        empTelephone: undefined,
-        empAddress: '',
-        empIdnumber: undefined,
-        empBank: undefined,
-        empHiredate: '',
-        deptId: undefined,
-        postId: undefined,
-        empIntroduction: undefined
+        yearOnly: undefined,
+        onlyMonth: undefined
       },
-      options: [],
-      rules: {
-        username: [{
-          required: true,
-          message: '请输入用户名',
-          trigger: 'blur'
-        }],
-        empName: [{
-          required: true,
-          message: '请输入姓名',
-          trigger: 'blur'
-        }],
-        empSex: [],
-        empEmail: [{
-          pattern: /^([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+@([a-zA-Z0-9]+[_|\_|\.]?)*[a-zA-Z0-9]+\.[a-zA-Z]{2,3}$/,
-          message: '请输入正确格式的邮箱',
-          trigger: 'blur'
-        }],
-        empTelephone: [{
-          pattern: /^1[3|4|5|7|8|9][0-9]\d{8}$/,
-          message: '请输入正确的手机号',
-          trigger: 'blur'
-        }],
-        empAddress: [],
-        empIdnumber: [],
-        empBank: [],
-        empHiredate: [],
-        deptId: [],
-        postId: [],
-        empIntroduction: []
-      },
-      empSexOptions: [{
-        'label': '男',
-        'value': '男'
+      total: undefined,
+      loading: false,
+      searchChange: false,
+      monthOptions: [{
+        value: '1',
+        label: '一月'
       }, {
-        'label': '女',
-        'value': '女'
-      }],
-      deptIdOptions: [],
-      postIdOptions: []
+        value: '2',
+        label: '二月'
+      }, {
+        value: '3',
+        label: '三月'
+      }, {
+        value: '4',
+        label: '四月'
+      }, {
+        value: '5',
+        label: '五月'
+      }, {
+        value: '6',
+        label: '六月'
+      }, {
+        value: '7',
+        label: '七月'
+      }, {
+        value: '8',
+        label: '八月'
+      }, {
+        value: '9',
+        label: '九月'
+      }, {
+        value: '10',
+        label: '十月'
+      }, {
+        value: '11',
+        label: '十一月'
+      }, {
+        value: '12',
+        label: '十二月'
+      }]
     }
   },
-  beforeCreate() {
+  watch: {
+    searchFromData: {
+      handler: function() {
+        this.searchChange = true
+      },
+      deep: true // 深度监听
+      // immediate: true,  //立即执行
+    }
   },
   created() {
-    // console.log(Moment().format('YYYY-MM-DD')) // 参数为空会生成当前时间
-    this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
-    this.initSelectForm()
+    this.getSalaryList(this.listQuery.pageNum, this.listQuery.pageSize)
+    searchSalary({}, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+      this.total = response.data.total
+    })
   },
   methods: {
-    initSelectForm() { // 初始化select表单项
-      getAllDeptIdAndName(this.$store.getters.token).then(response => {
-        this.deptIdOptions = response.data
-      }).catch(error => {
-        console.log(error)
+    search() {
+      const condition = {}
+      if (this.searchFromData.empId) {
+        condition['empId'] = this.searchFromData.empId
+      }
+      if (this.searchFromData.empName) {
+        condition['empName'] = this.searchFromData.empName
+      }
+      if (this.searchFromData.yearOnly) {
+        condition['yearOnly'] = this.searchFromData.yearOnly
+      }
+      if (this.searchFromData.onlyMonth) {
+        condition['onlyMonth'] = this.searchFromData.onlyMonth
+      }
+      this.loading = true
+      if (this.searchChange) {
+        this.listQuery.pageNum = 1
+        this.searchChange = false
+      }
+      searchSalary(condition, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+        this.tableData = response.data.list
+        this.listQuery.total = response.data.total
+        this.loading = false
+      }).catch(() => {
+        this.loading = false
       })
-      getAllPostIdAndName(this.$store.getters.token).then(response => {
-        this.postIdOptions = response.data
-      }).catch(error => {
-        console.log(error)
-      })
+    },
+    getSalaryList(pageNum, pageSize) {
+      this.search(pageNum, pageSize)
     },
     pageChange() {
-      this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
+      this.getSalaryList(this.listQuery.pageNum, this.listQuery.pageSize)
     },
     sizeChange(pageSize) {
-      this.getEmpList(1, pageSize)
-    },
-    open() {
-      this.$confirm('此操作将永久删除, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.handleDelete()
-      }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除'
-        })
-      })
-    },
-    handleDelete() {
-      const requestBody = {}
-      this.delPrimaryKeySet.forEach((value, index) => {
-        requestBody[index] = value
-      })
-      deleteEmp(requestBody).then(response => {
-        this.$message.info('删除成功')
-        this.listQuery.pageNum = 1
-        this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
-      }).catch(error => {
-        this.$message.error('删除失败')
-        console.log(error)
-      })
-    },
-    // 点击全选按钮
-    handleSelectAll(selection) {
-      console.log(selection)
-      const temp = []
-      selection.forEach((value) => {
-        temp.push(value.emp_id)
-      })
-      this.delPrimaryKeySet = temp
-      if (selection.length > 0) {
-        this.deleteButtonDisable = false
-      } else if (selection.length === 0) {
-        this.deleteButtonDisable = true
-      }
-    },
-    // 单个选择
-    // selection: 选中的所有项， row： 刚刚勾选的行
-    handleSelect(selection, row) {
-      const temp = []
-      selection.forEach((value) => {
-        temp.push(value.emp_id)
-      })
-      this.delPrimaryKeySet = temp
-      if (selection.length === 1) {
-        this.updateButtonDisable = false
-      } else if (selection.length !== 1) {
-        this.updateButtonDisable = true
-      }
-      if (selection.length > 0) {
-        this.deleteButtonDisable = false
-      } else if (selection.length === 0) {
-        this.deleteButtonDisable = true
-      }
-    },
-    // 获取表头信息， 即获取对象的 所有 keys
-    getTableHeader(tableData) {
-      const arr = []
-      let i = 0
-      for (const item in tableData) {
-        arr[i] = item
-        i++
-      }
-      return arr
+      this.getSalaryList(1, pageSize)
     },
     // 单个对象转为一个数组 ===》 filter
     objectToArray(obj) {
       const arr = []
       let i = 0
-      const header_title = ['emp_id', 'username', 'emp_name', 'emp_sex', 'emp_email', 'emp_telephone', 'emp_address', 'emp_idnumber', 'emp_bank', 'emp_hiredate', 'dept_name', 'post_name', 'emp_introduction']
+      const header_title = ['emp_id', 'emp_name', 'salary_year', 'salary_month', 'base_salary', 'post_salary', 'per_old', 'per_medical', 'per_fire', 'per_house',
+        'child_edu', 'continue_edu', 'rent', 'credit', 'old_man', 'big_sick', 'taxable_income', 'tax_money', 'real_salary']
       for (const key of header_title) {
         arr[i++] = !obj[key] ? '' : obj[key]
       }
@@ -727,23 +330,43 @@ export default {
       return tableData.map(v => this.objectToArray(v))
     },
     handleDownload() {
-      const header = ['员工编号', '用户名', '姓名', '性别', '邮箱', '电话', '住址', '身份证号', '银行卡号', '入职时间', '所属部门', '岗位', '个人简介']
       const data = this.formatJson(this.tableData)
-      import('@/vendor/Export2Excel').then(excel => {
-        excel.export_json_to_excel({
-          // header: this.getTableHeader(this.tableData[0]),
-          header: header,
-          data: data, // 具体数据 必填  ====>  二维数组
-          filename: 'emp-page-list', // 非必填
-          autoWidth: true, // 非必填
-          bookType: 'xlsx' // 非必填 xlsx
-        })
-      })
+      data.unshift(
+        ['员工编号', '员工姓名', '年份', '月份', '应发工资', null, '专项扣除', null, null, null, '专项附加扣除', null, null, null, null, null, '应纳税所得额', '个人所得税', '实发工资'],
+        [null, null, null, null, '基本工资', '岗位工资', '养老保险', '医疗保险', '失业保险', '住房公积金', '子女教育', '继续教育', '住房租金', '住房贷款利息', '赡养老人', '大病医疗', null, null, null]
+      )
+      const sheet = XLSX.utils.aoa_to_sheet(data)
+      sheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 1, c: 0 }},
+        { s: { r: 0, c: 1 }, e: { r: 1, c: 1 }},
+        { s: { r: 0, c: 2 }, e: { r: 1, c: 2 }},
+        { s: { r: 0, c: 3 }, e: { r: 1, c: 3 }},
+        { s: { r: 0, c: 4 }, e: { r: 0, c: 5 }},
+        { s: { r: 0, c: 6 }, e: { r: 0, c: 9 }},
+        { s: { r: 0, c: 10 }, e: { r: 0, c: 15 }},
+        { s: { r: 0, c: 16 }, e: { r: 1, c: 16 }},
+        { s: { r: 0, c: 17 }, e: { r: 1, c: 17 }},
+        { s: { r: 0, c: 18 }, e: { r: 1, c: 18 }}
+      ]
+      openDownloadDialog(sheet2blob(sheet), 'salary-page.xlsx')
     },
     handleDownloadAll() {
       let wholeTableData = []
       new Promise((resolve, reject) => {
-        getEmps(1, this.listQuery.total, this.$store.getters.token).then(response => {
+        const condition = {}
+        if (this.searchFromData.empId) {
+          condition['empId'] = this.searchFromData.empId
+        }
+        if (this.searchFromData.empName) {
+          condition['empName'] = this.searchFromData.empName
+        }
+        if (this.searchFromData.yearOnly) {
+          condition['yearOnly'] = this.searchFromData.yearOnly
+        }
+        if (this.searchFromData.onlyMonth) {
+          condition['onlyMonth'] = this.searchFromData.onlyMonth
+        }
+        searchSalary(condition, 1, this.total, this.$store.getters.token).then(response => {
           wholeTableData = response.data.list
           resolve()
         }).catch(error => {
@@ -751,111 +374,79 @@ export default {
           reject()
         })
       }).then(() => {
-        const header = ['员工编号', '用户名', '姓名', '性别', '邮箱', '电话', '住址', '身份证号', '银行卡号', '入职时间', '所属部门', '岗位', '个人简介']
         const data = this.formatJson(wholeTableData)
-        import('@/vendor/Export2Excel').then(excel => {
-          excel.export_json_to_excel({
-            header,
-            data: data, // 具体数据 必填  ====>  二维数组
-            filename: 'emp-all-list', // 非必填
-            autoWidth: true, // 非必填
-            bookType: 'xlsx' // 非必填 xlsx
-          })
+        data.unshift(
+          ['员工编号', '员工姓名', '年份', '月份', '应发工资', null, '专项扣除', null, null, null, '专项附加扣除', null, null, null, null, null, '应纳税所得额', '个人所得税', '实发工资'],
+          [null, null, null, null, '基本工资', '岗位工资', '养老保险', '医疗保险', '失业保险', '住房公积金', '子女教育', '继续教育', '住房租金', '住房贷款利息', '赡养老人', '大病医疗', null, null, null]
+        )
+        const sheet = XLSX.utils.aoa_to_sheet(data)
+        sheet['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 1, c: 0 }},
+          { s: { r: 0, c: 1 }, e: { r: 1, c: 1 }},
+          { s: { r: 0, c: 2 }, e: { r: 1, c: 2 }},
+          { s: { r: 0, c: 3 }, e: { r: 1, c: 3 }},
+          { s: { r: 0, c: 4 }, e: { r: 0, c: 5 }},
+          { s: { r: 0, c: 6 }, e: { r: 0, c: 9 }},
+          { s: { r: 0, c: 10 }, e: { r: 0, c: 15 }},
+          { s: { r: 0, c: 16 }, e: { r: 1, c: 16 }},
+          { s: { r: 0, c: 17 }, e: { r: 1, c: 17 }},
+          { s: { r: 0, c: 18 }, e: { r: 1, c: 18 }}
+        ]
+        openDownloadDialog(sheet2blob(sheet), 'salary-all.xlsx')
+      })
+    },
+    generate() {
+      this.$confirm('将重新生成数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.loading = true
+        generateSalary(this.$store.getters.token).then(() => {
+          this.loading = false
+          this.getSalaryList(this.listQuery.pageNum, this.listQuery.pageSize)
+        }).catch()
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
         })
       })
     },
-    getEmpList(pageNum, pageSize) {
-      getEmps(pageNum, pageSize, this.$store.getters.token).then(response => {
-        this.tableData = response.data.list
-        // this.tableData.forEach((value) => {
-        //   if (value.emp_hiredate) {
-        //     value.emp_hiredate = Moment(value.emp_hiredate).format('YYYY-MM-DD HH:mm:ss')
-        //   }
-        // })
-        this.listQuery.total = response.data.total
-      }).catch(error => {
-        console.log(error)
+    generateNextMonth() {
+      this.$confirm('将生成下月数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.loading = true
+        generateNextSalary(this.$store.getters.token).then(() => {
+          this.loading = false
+          this.getSalaryList(this.listQuery.pageNum, this.listQuery.pageSize)
+        }).catch()
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
       })
     },
-    // 弹出添加窗口
-    onOpen() {
-      this.dialogFormVisible = true
-    },
-    alterOnOpen() {
-      this.alterDialog = true
-      this.tableData.forEach((item) => {
-        if (item.emp_id === this.delPrimaryKeySet[0]) {
-          this.alterFormData.empId = item.emp_id
-          this.alterFormData.username = item.username
-          this.alterFormData.empName = item.emp_name
-          this.alterFormData.empSex = item.emp_sex
-          this.alterFormData.empEmail = item.emp_email
-          this.alterFormData.empTelephone = item.emp_telephone
-          this.alterFormData.empAddress = item.emp_address
-          this.alterFormData.empIdnumber = item.emp_idnumber
-          this.alterFormData.empBank = item.emp_bank
-          this.alterFormData.empHiredate = item.emp_hiredate
-          this.alterFormData.deptId = item.dept_id
-          this.alterFormData.postId = item.post_id
-          this.alterFormData.empIntroduction = item.emp_introduction
-        }
-      })
-    },
-    onClose() {
-    },
-    alterOnClose() {
-    },
-    alterRuleForm(formName) {
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          new Promise((resolve, reject) => {
-            updateEmp(this.alterFormData).then(() => {
-              this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
-              this.deleteButtonDisable = true
-              this.updateButtonDisable = true
-              this.$message.info('修改成功')
-              this.listQuery.pageNum = 1
-              this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
-              resolve()
-            }).catch(error => {
-              this.$message.error('修改失败')
-              reject(error)
-            })
-          }).then(() => {
-            this.resetForm(formName)
-            this.alterDialog = false
-          }).catch(error => {
-            console.log(error)
-          })
-        } else {
-          // console.log('error submit!!')
-          return false
-        }
-      })
-    },
-    submitForm(formName) { // 添加
-      this.$refs[formName].validate((valid) => {
-        if (valid) {
-          new Promise((resolve, reject) => {
-            addEmp(this.formData).then(() => {
-              this.listQuery.pageNum = 1
-              this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
-              this.$message.info('添加成功')
-              resolve()
-            }).catch(error => {
-              this.$message.error('添加失败')
-              reject(error)
-            })
-          }).then(() => {
-            this.resetForm(formName) // 添加成功后重置表单内容
-            this.dialogFormVisible = false
-          }).catch(error => {
-            console.log(error)
-          })
-        } else {
-          // console.log('error submit!!')
-          return false
-        }
+    deleteLastMonth() {
+      this.$confirm('将删除上月数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.loading = true
+        deleteLastSalary(this.$store.getters.token).then(() => {
+          this.loading = false
+          this.getSalaryList(this.listQuery.pageNum, this.listQuery.pageSize)
+        }).catch()
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
       })
     },
     resetForm(formName) {

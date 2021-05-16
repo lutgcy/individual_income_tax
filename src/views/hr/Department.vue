@@ -5,7 +5,7 @@
       <el-button :disabled="updateButtonDisable" type="success" icon="el-icon-edit" size="mini" @click="alterOnOpen">修改</el-button>
       <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-delete" size="mini" @click="open">删除</el-button>
       <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
-      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">Export All</el-button>
+      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
     </el-row>
 
     <!--    表格内容主体-->

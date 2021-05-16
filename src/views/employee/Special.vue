@@ -32,8 +32,8 @@
 
     </el-form>
     <el-row>
-      <el-button plain type="warning" icon="el-icon-document" size="mini">导出当前页</el-button>
-      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">Export All</el-button>
+      <el-button plain type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
+      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
     </el-row>
     <el-table
       ref="multipleTable"
@@ -143,6 +143,8 @@
 
 <script>
 import { searchSpecial } from '@/api/special'
+import XLSX from 'xlsx'
+import { openDownloadDialog, sheet2blob } from '@/utils/myexcel'
 
 export default {
   name: 'Special',
@@ -158,6 +160,7 @@ export default {
         yearOnly: undefined,
         onlyMonth: undefined
       },
+      total: undefined,
       loading: false,
       searchChange: false,
       monthOptions: [{
@@ -201,6 +204,9 @@ export default {
   },
   created() {
     this.getSpecialsList(this.listQuery.pageNum, this.listQuery.pageSize)
+    searchSpecial({}, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+      this.total = response.data.total
+    })
   },
   watch: {
     searchFromData: {
@@ -241,6 +247,72 @@ export default {
     },
     sizeChange(pageSize) {
       this.getSpecialsList(1, pageSize)
+    },
+    // 单个对象转为一个数组 ===》 filter
+    objectToArray(obj) {
+      const arr = []
+      let i = 0
+      const header_title = ['emp_id', 'emp_name', 'special_year', 'special_month', 'per_old', 'per_medical', 'per_fire', 'per_house', 'comp_hurt', 'comp_birth', 'comp_old', 'comp_medical', 'comp_fire', 'comp_house']
+      for (const key of header_title) {
+        arr[i++] = !obj[key] ? '' : obj[key]
+      }
+      return arr
+    },
+    // 对象数组转为二维数组 ===》 filter
+    formatJson(tableData) {
+      return tableData.map(v => this.objectToArray(v))
+    },
+    handleDownload() {
+      const data = this.formatJson(this.tableData)
+      data.unshift(
+        ['员工编号', '员工姓名', '年份', '月份', '个人(元/单位)', null, null, null, '企业(元/单位)', null, null, null, null, null],
+        [null, null, null, null, '养老保险', '医疗保险', '失业保险', '住房公积金', '工伤保险', '生育保险', '养老保险', '医疗保险', '失业保险', '住房公积金']
+      )
+      const sheet = XLSX.utils.aoa_to_sheet(data)
+      sheet['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 1, c: 0 }},
+        { s: { r: 0, c: 1 }, e: { r: 1, c: 1 }},
+        { s: { r: 0, c: 2 }, e: { r: 1, c: 2 }},
+        { s: { r: 0, c: 3 }, e: { r: 1, c: 3 }},
+        { s: { r: 0, c: 4 }, e: { r: 0, c: 7 }},
+        { s: { r: 0, c: 8 }, e: { r: 0, c: 13 }}
+      ]
+      openDownloadDialog(sheet2blob(sheet), 'special-page.xlsx')
+    },
+    handleDownloadAll() {
+      let wholeTableData = []
+      new Promise((resolve, reject) => {
+        const condition = {}
+        if (this.searchFromData.yearOnly) {
+          condition['yearOnly'] = this.searchFromData.yearOnly
+        }
+        if (this.searchFromData.onlyMonth) {
+          condition['onlyMonth'] = this.searchFromData.onlyMonth
+        }
+        searchSpecial(condition, 1, this.total, this.$store.getters.token).then(response => {
+          wholeTableData = response.data.list
+          resolve()
+        }).catch(error => {
+          console.log(error)
+          reject()
+        })
+      }).then(() => {
+        const data = this.formatJson(wholeTableData)
+        data.unshift(
+          ['员工编号', '员工姓名', '年份', '月份', '个人(元/单位)', null, null, null, '企业(元/单位)', null, null, null, null, null],
+          [null, null, null, null, '养老保险', '医疗保险', '失业保险', '住房公积金', '工伤保险', '生育保险', '养老保险', '医疗保险', '失业保险', '住房公积金']
+        )
+        const sheet = XLSX.utils.aoa_to_sheet(data)
+        sheet['!merges'] = [
+          { s: { r: 0, c: 0 }, e: { r: 1, c: 0 }},
+          { s: { r: 0, c: 1 }, e: { r: 1, c: 1 }},
+          { s: { r: 0, c: 2 }, e: { r: 1, c: 2 }},
+          { s: { r: 0, c: 3 }, e: { r: 1, c: 3 }},
+          { s: { r: 0, c: 4 }, e: { r: 0, c: 7 }},
+          { s: { r: 0, c: 8 }, e: { r: 0, c: 13 }}
+        ]
+        openDownloadDialog(sheet2blob(sheet), 'special-all.xlsx')
+      })
     },
     resetForm(formName) {
       this.$refs[formName].resetFields()

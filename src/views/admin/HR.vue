@@ -39,7 +39,7 @@
       <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-delete" size="mini" @click="open">删除</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-key" size="mini">重置密码</el-button>
       <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
-      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">Export All</el-button>
+      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-document" size="mini" @click="handleDownload">Export Selected</el-button>
     </el-row>
 

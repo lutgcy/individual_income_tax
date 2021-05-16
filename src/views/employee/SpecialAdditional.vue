@@ -45,7 +45,7 @@
       <router-link to="/employee/additional/newapply/index"><el-link icon="el-icon-edit" style="margin: 0 10px; color: #1890ff">申请</el-link></router-link>
       <!--      <router-link  to="/employee/additional/applyrecord/index"><el-link icon="el-icon-view" style="margin: 0 10px">申请记录</el-link></router-link>-->
       <el-button plain type="warning" icon="el-icon-document" size="mini">导出当前页</el-button>
-      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">Export All</el-button>
+      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">导出所有页</el-button>
     </el-row>
     <el-table
       v-loading="loading"

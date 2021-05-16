@@ -54,9 +54,9 @@
 
     </el-form>
     <el-row>
-      <el-button plain type="primary" icon="el-icon-plus" size="mini" @click="generate">重新生成纳税数据</el-button>
-      <el-button plain type="warning" icon="el-icon-document" size="mini">导出当前页</el-button>
-      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini">Export All</el-button>
+<!--      <el-button plain type="primary" icon="el-icon-refresh-right" size="mini" @click="generate">重新生成纳税数据</el-button>-->
+      <el-button plain type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
+      <el-button plain :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
     </el-row>
     <el-table
       ref="multipleTable"
@@ -121,7 +121,9 @@
 </template>
 
 <script>
-import {generateTax, searchTaxDetail} from '@/api/tax'
+import { generateTax, searchTaxDetail } from '@/api/tax'
+import XLSX from 'xlsx'
+import { openDownloadDialog, sheet2blob } from '@/utils/myexcel'
 
 export default {
   data() {
@@ -138,6 +140,7 @@ export default {
         yearOnly: undefined,
         onlyMonth: undefined
       },
+      total: undefined,
       loading: false,
       searchChange: false,
       monthOptions: [{
@@ -190,6 +193,9 @@ export default {
   },
   created() {
     this.getTaxDetailList(this.listQuery.pageNum, this.listQuery.pageSize)
+    searchTaxDetail({}, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+      this.total = response.data.total
+    })
   },
   methods: {
     search() {
@@ -213,7 +219,6 @@ export default {
       }
       searchTaxDetail(condition, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
         this.tableData = response.data.list
-        console.log(response)
         this.listQuery.total = response.data.total
         this.loading = false
       }).catch(() => {
@@ -228,6 +233,60 @@ export default {
     },
     sizeChange(pageSize) {
       this.getTaxDetailList(1, pageSize)
+    },
+    // 单个对象转为一个数组 ===》 filter
+    objectToArray(obj) {
+      const arr = []
+      let i = 0
+      const header_title = ['emp_id', 'emp_name', 'tax_year', 'tax_month', 'taxable_income', 'tax_money']
+      for (const key of header_title) {
+        arr[i++] = !obj[key] ? '' : obj[key]
+      }
+      return arr
+    },
+    // 对象数组转为二维数组 ===》 filter
+    formatJson(tableData) {
+      return tableData.map(v => this.objectToArray(v))
+    },
+    handleDownload() {
+      const data = this.formatJson(this.tableData)
+      data.unshift(
+        ['员工编号', '员工姓名', '年份', '月份', '应纳税所得额', '应纳税额']
+      )
+      const sheet = XLSX.utils.aoa_to_sheet(data)
+      openDownloadDialog(sheet2blob(sheet), 'tax-page.xlsx')
+    },
+    handleDownloadAll() {
+      let wholeTableData = []
+      new Promise((resolve, reject) => {
+        const condition = {}
+        if (this.searchFromData.empId) {
+          condition['empId'] = this.searchFromData.empId
+        }
+        if (this.searchFromData.empName) {
+          condition['empName'] = this.searchFromData.empName
+        }
+        if (this.searchFromData.yearOnly) {
+          condition['yearOnly'] = this.searchFromData.yearOnly
+        }
+        if (this.searchFromData.onlyMonth) {
+          condition['onlyMonth'] = this.searchFromData.onlyMonth
+        }
+        searchTaxDetail(condition, 1, this.total, this.$store.getters.token).then(response => {
+          wholeTableData = response.data.list
+          resolve()
+        }).catch(error => {
+          console.log(error)
+          reject()
+        })
+      }).then(() => {
+        const data = this.formatJson(wholeTableData)
+        data.unshift(
+          ['员工编号', '员工姓名', '年份', '月份', '应纳税所得额', '应纳税额']
+        )
+        const sheet = XLSX.utils.aoa_to_sheet(data)
+        openDownloadDialog(sheet2blob(sheet), 'tax-all.xlsx')
+      })
     },
     generate() {
       this.$confirm('将重新生成数据, 是否继续?', '提示', {

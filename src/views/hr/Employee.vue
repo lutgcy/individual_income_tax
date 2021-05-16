@@ -1,36 +1,67 @@
 <template>
   <div class="app-container">
-    <el-form :inline="true">
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
+    <el-form ref='searchForm' :inline="true" :model="searchFromData">
+      <el-form-item
+        prop="empId"
+        label="员工编号"
+        size="medium"
+      >
+        <el-input
+          v-model="searchFromData.empId"
+          size="small"
+          placeholder="请输入员工编号"
+          clearable
+          style="width: 240px"
+        />
       </el-form-item>
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
+      <el-form-item prop="empName" label="员工姓名" size="medium">
+        <el-input
+          v-model="searchFromData.empName"
+          size="small"
+          placeholder="请输入员工姓名"
+          clearable
+          style="width: 240px"
+        />
       </el-form-item>
-      <el-form-item label="搜索条件" size="medium">
-        <el-input size="small" style="width: 240px" />
-      </el-form-item>
-
-      <el-form-item>
-        <div class="block">
-          <span class="demonstration">带快捷选项</span>
-          <el-date-picker
-            v-model="date_value"
-            type="daterange"
-            align="right"
-            unlink-panels
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            :picker-options="pickerOptions"
+      <el-form-item label="所属部门" prop="deptId">
+        <el-select
+          v-model="searchFromData.deptId"
+          placeholder="请选择所属部门"
+          filterable
+          clearable
+          :style="{width: '90%'}"
+        >
+          <el-option
+            v-for="item in deptIdOptions"
+            :key="item.dept_id"
+            :label="item.dept_name"
+            :value="item.dept_id"
           />
-        </div>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="岗位" prop="postId">
+        <el-select
+          v-model="searchFromData.postId"
+          placeholder="请选择岗位"
+          filterable
+          clearable
+          :style="{width: '90%'}"
+        >
+          <el-option
+            v-for="item in postIdOptions"
+            :key="item.post_id"
+            :label="item.post_name"
+            :value="item.post_id"
+          />
+        </el-select>
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini">重置</el-button>
+        <el-button type="primary" icon="el-icon-search" size="mini" @click="search">查找</el-button>
+        <el-button icon="el-icon-refresh" size="mini" @click="resetForm('searchForm')">重置</el-button>
       </el-form-item>
+
     </el-form>
     <el-row>
       <el-button type="primary" icon="el-icon-plus" size="mini" @click="onOpen">新增</el-button>
@@ -38,7 +69,7 @@
       <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-delete" size="mini" @click="deleteEmp">删除</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-key" size="mini">重置密码</el-button>
       <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
-      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">Export All</el-button>
+      <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-document" size="mini" @click="handleDownload">Export Selected</el-button>
     </el-row>
 
@@ -490,7 +521,15 @@
 </template>
 
 <script>
-import { addEmp, deleteEmp, getAllDeptIdAndName, getAllPostIdAndName, getEmps, updateEmp } from '@/api/emp'
+import {
+  addEmp,
+  deleteEmp,
+  getAllDeptIdAndName,
+  getAllPostIdAndName,
+  getEmps,
+  searchEmployee,
+  updateEmp
+} from '@/api/emp'
 // import Moment from 'moment'
 
 export default {
@@ -503,6 +542,15 @@ export default {
         pageSize: 10
       },
       tableData: [],
+      searchFromData: {
+        empId: undefined,
+        empName: undefined,
+        deptId: undefined,
+        postId: undefined
+      },
+      total: undefined,
+      loading: false,
+      searchChange: false,
       pickerOptions: {
         shortcuts: [{
           text: '最近一周',
@@ -613,8 +661,49 @@ export default {
     // console.log(Moment().format('YYYY-MM-DD')) // 参数为空会生成当前时间
     this.getEmpList(this.listQuery.pageNum, this.listQuery.pageSize)
     this.initSelectForm()
+    searchEmployee({}, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+      this.total = response.data.total
+    })
+  },
+  watch: {
+    searchFromData: {
+      handler: function() {
+        this.searchChange = true
+      },
+      deep: true // 深度监听
+    }
   },
   methods: {
+    search() {
+      const condition = {}
+      if (this.searchFromData.empId) {
+        condition['empId'] = this.searchFromData.empId
+      }
+      if (this.searchFromData.empName) {
+        condition['empName'] = this.searchFromData.empName
+      }
+      if (this.searchFromData.deptId) {
+        condition['deptId'] = this.searchFromData.deptId
+      }
+      if (this.searchFromData.postId) {
+        condition['postId'] = this.searchFromData.postId
+      }
+      this.loading = true
+      if (this.searchChange) {
+        this.listQuery.pageNum = 1
+        this.searchChange = false
+      }
+      searchEmployee(condition, this.listQuery.pageNum, this.listQuery.pageSize, this.$store.getters.token).then((response) => {
+        this.tableData = response.data.list
+        this.listQuery.total = response.data.total
+        this.loading = false
+      }).catch(() => {
+        this.loading = false
+      })
+    },
+    getEmpList(pageNum, pageSize) {
+      this.search(pageNum, pageSize)
+    },
     initSelectForm() { // 初始化select表单项
       getAllDeptIdAndName(this.$store.getters.token).then(response => {
         this.deptIdOptions = response.data
@@ -734,7 +823,7 @@ export default {
     handleDownloadAll() {
       let wholeTableData = []
       new Promise((resolve, reject) => {
-        getEmps(1, this.listQuery.total, this.$store.getters.token).then(response => {
+        getEmps(1, this.total, this.$store.getters.token).then(response => {
           wholeTableData = response.data.list
           resolve()
         }).catch(error => {
@@ -753,19 +842,6 @@ export default {
             bookType: 'xlsx' // 非必填 xlsx
           })
         })
-      })
-    },
-    getEmpList(pageNum, pageSize) {
-      getEmps(pageNum, pageSize, this.$store.getters.token).then(response => {
-        this.tableData = response.data.list
-        // this.tableData.forEach((value) => {
-        //   if (value.emp_hiredate) {
-        //     value.emp_hiredate = Moment(value.emp_hiredate).format('YYYY-MM-DD HH:mm:ss')
-        //   }
-        // })
-        this.listQuery.total = response.data.total
-      }).catch(error => {
-        console.log(error)
       })
     },
     // 弹出添加窗口

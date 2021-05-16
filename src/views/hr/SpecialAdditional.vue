@@ -47,11 +47,11 @@
           <el-button type="primary" icon="el-icon-search" size="mini" @click="search">查找</el-button>
           <el-button icon="el-icon-refresh" size="mini" @click="resetForm('searchForm')">重置</el-button>
         </el-form-item>
-        <el-form-item>
-          <el-button size="medium" @click="setZero">setZero</el-button>
-          <el-button type="success" icon="el-icon-edit" size="medium">XX</el-button>
-          <el-button type="primary" icon="el-icon-plus" size="medium">XX</el-button>
-        </el-form-item>
+<!--        <el-form-item>-->
+<!--          <el-button size="medium" @click="setZero">setZero</el-button>-->
+<!--          <el-button type="success" icon="el-icon-edit" size="medium">XX</el-button>-->
+<!--          <el-button type="primary" icon="el-icon-plus" size="medium">XX</el-button>-->
+<!--        </el-form-item>-->
       </el-form>
 
     </el-row>
@@ -264,11 +264,11 @@ export default {
   },
   methods: {
     setZero() {
-      setZero().then(() => {
-
-      }).catch(() => {
-        alert('error')
-      })
+      // setZero().then(() => {
+      //
+      // }).catch(() => {
+      //   alert('error')
+      // })
     },
     selectChange() {
       this.search()

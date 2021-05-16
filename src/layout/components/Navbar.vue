@@ -15,6 +15,7 @@
         <el-tooltip content="Global Size" effect="dark" placement="bottom">
           <size-select id="size-select" class="right-menu-item hover-effect" />
         </el-tooltip>
+        <el-tag size="medium" effect="plain" style="display: inline-block; position:relative; top: -14px">当前用户：{{ name }}</el-tag>
 
       </template>
 
@@ -65,7 +66,8 @@ export default {
     ...mapGetters([
       'sidebar',
       'avatar',
-      'device'
+      'device',
+      'name'
     ])
   },
   methods: {
