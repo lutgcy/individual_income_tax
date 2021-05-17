@@ -1,43 +1,10 @@
 <template>
   <div class="app-container">
-<!--    <el-form :inline="true">-->
-<!--      <el-form-item label="搜索条件" size="medium">-->
-<!--        <el-input size="small" style="width: 240px" />-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="搜索条件" size="medium">-->
-<!--        <el-input size="small" style="width: 240px" />-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="搜索条件" size="medium">-->
-<!--        <el-input size="small" style="width: 240px" />-->
-<!--      </el-form-item>-->
-
-<!--      <el-form-item>-->
-<!--        <div class="block">-->
-<!--          <span class="demonstration">带快捷选项</span>-->
-<!--          <el-date-picker-->
-<!--            v-model="date_value"-->
-<!--            type="daterange"-->
-<!--            align="right"-->
-<!--            unlink-panels-->
-<!--            range-separator="至"-->
-<!--            start-placeholder="开始日期"-->
-<!--            end-placeholder="结束日期"-->
-<!--            :picker-options="pickerOptions"-->
-<!--          />-->
-<!--        </div>-->
-<!--      </el-form-item>-->
-
-<!--      <el-form-item>-->
-<!--        <el-button type="primary" icon="el-icon-search" size="mini">搜索</el-button>-->
-<!--        <el-button icon="el-icon-refresh" size="mini">重置</el-button>-->
-<!--      </el-form-item>-->
-<!--    </el-form>-->
-
     <el-row>
       <el-button type="primary" icon="el-icon-plus" size="mini" @click="onOpen">新增</el-button>
       <el-button :disabled="updateButtonDisable" type="success" icon="el-icon-edit" size="mini" @click="alterOnOpen">修改</el-button>
       <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-delete" size="mini" @click="open">删除</el-button>
-      <el-button :disabled="true" type="danger" icon="el-icon-key" size="mini">重置密码</el-button>
+      <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-key" size="mini" @click="resetPwd">重置密码</el-button>
       <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
       <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-document" size="mini" @click="handleDownload">Export Selected</el-button>
@@ -404,8 +371,7 @@
 
 <script>
 import { addHr, deleteHr, getHrs, updateHr } from '@/api/hr'
-import {getDepts} from "@/api/dept";
-import Moment from "moment";
+import { resetHrPassword } from '@/api/password'
 
 export default {
   components: {
@@ -539,6 +505,28 @@ export default {
     sizeChange(pageSize) {
       this.getHrsList(1, pageSize)
     },
+    resetPwd() {
+      this.$confirm('此操作将重置密码, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const requestBody = {}
+        this.delPrimaryKeySet.forEach((value, index) => {
+          requestBody[index] = value
+        })
+        resetHrPassword(requestBody).then(() => {
+          this.$message.info('重置成功')
+        }).catch(() => {
+          this.$message.error('重置失败')
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
     open() {
       this.$confirm('此操作将永久删除, 是否继续?', '提示', {
         confirmButtonText: '确定',
@@ -546,10 +534,6 @@ export default {
         type: 'warning'
       }).then(() => {
         this.handleDelete()
-        // this.$message({
-        //   type: 'success',
-        //   message: '删除成功!'
-        // })
       }).catch(() => {
         this.$message({
           type: 'info',

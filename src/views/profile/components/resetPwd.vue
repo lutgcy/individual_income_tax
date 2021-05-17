@@ -19,6 +19,9 @@
 <script>
 // import { updateUserPwd } from '@/api/system/user'
 
+import { updatePassword } from '@/api/password'
+import Crypto from 'crypto'
+
 export default {
   data() {
     const equalToPassword = (rule, value, callback) => {
@@ -55,9 +58,20 @@ export default {
     submit() {
       this.$refs['form'].validate(valid => {
         if (valid) {
-          updateUserPwd(this.user.oldPassword, this.user.newPassword).then(
+          // 对密码进行加密处理再传输
+          const hash = Crypto.createHash('SHA256')
+          hash.update(this.user.oldPassword)
+          const oldPassword = hash.digest('hex')
+          const hash2 = Crypto.createHash('SHA256')
+          hash2.update(this.user.newPassword)
+          const newPassword = hash2.digest('hex')
+          updatePassword(oldPassword, newPassword, this.$store.getters.token).then(
             response => {
-              this.msgSuccess('修改成功')
+              if (response.data === 'success') {
+                this.$message.info('修改成功')
+              } else if (response.data === 'error') {
+                this.$message.error('修改失败')
+              }
             }
           )
         }

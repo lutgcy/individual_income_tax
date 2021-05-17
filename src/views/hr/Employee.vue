@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form ref='searchForm' :inline="true" :model="searchFromData">
+    <el-form ref="searchForm" :inline="true" :model="searchFromData">
       <el-form-item
         prop="empId"
         label="员工编号"
@@ -67,7 +67,7 @@
       <el-button type="primary" icon="el-icon-plus" size="mini" @click="onOpen">新增</el-button>
       <el-button :disabled="updateButtonDisable" type="success" icon="el-icon-edit" size="mini" @click="alterOnOpen">修改</el-button>
       <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-delete" size="mini" @click="deleteEmp">删除</el-button>
-      <el-button :disabled="true" type="danger" icon="el-icon-key" size="mini">重置密码</el-button>
+      <el-button :disabled="deleteButtonDisable" type="danger" icon="el-icon-key" size="mini" @click="resetPwd">重置密码</el-button>
       <el-button type="warning" icon="el-icon-document" size="mini" @click="handleDownload">导出当前页</el-button>
       <el-button :disabled="false" type="danger" icon="el-icon-document" size="mini" @click="handleDownloadAll">导出所有页</el-button>
       <el-button :disabled="true" type="danger" icon="el-icon-document" size="mini" @click="handleDownload">Export Selected</el-button>
@@ -530,7 +530,7 @@ import {
   searchEmployee,
   updateEmp
 } from '@/api/emp'
-// import Moment from 'moment'
+import { resetEmpPassword, resetHrPassword } from '@/api/password'
 
 export default {
   components: {},
@@ -655,6 +655,14 @@ export default {
       postIdOptions: []
     }
   },
+  watch: {
+    searchFromData: {
+      handler: function() {
+        this.searchChange = true
+      },
+      deep: true // 深度监听
+    }
+  },
   beforeCreate() {
   },
   created() {
@@ -665,15 +673,29 @@ export default {
       this.total = response.data.total
     })
   },
-  watch: {
-    searchFromData: {
-      handler: function() {
-        this.searchChange = true
-      },
-      deep: true // 深度监听
-    }
-  },
   methods: {
+    resetPwd() {
+      this.$confirm('此操作将重置密码, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        const requestBody = {}
+        this.delPrimaryKeySet.forEach((value, index) => {
+          requestBody[index] = value
+        })
+        resetEmpPassword(requestBody).then(() => {
+          this.$message.info('重置成功')
+        }).catch(() => {
+          this.$message.error('重置失败')
+        })
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消'
+        })
+      })
+    },
     search() {
       const condition = {}
       if (this.searchFromData.empId) {
