@@ -24,6 +24,10 @@ import SlideVerify from 'vue-monoplasty-slide-verify'
 
 Vue.use(SlideVerify)
 
+// 引入echarts
+import echarts from 'echarts'
+Vue.prototype.$echarts = echarts
+
 // 定义全局时间戳过滤器
 Vue.filter('formatDate', function(value) {
   return Moment(value).format('YYYY-MM-DD HH:mm:ss')

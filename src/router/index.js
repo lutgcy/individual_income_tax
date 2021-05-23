@@ -234,7 +234,7 @@ export const asyncRoutes = [
         path: 'checkdetail',
         component: () => import('@/views/hr/CheckTaxDetail'),
         name: 'hrCheckDetail',
-        meta: { title: '纳税记录', icon: 'el-icon-money' }
+        meta: { title: '纳税管理', icon: 'el-icon-money' }
       }
       // {
       //   path: 'freetax',
@@ -383,53 +383,53 @@ export const asyncRoutes = [
         path: 'index',
         component: () => import('@/views/employee/Salary'),
         name: 'Salary',
-        meta: { title: '工资管理', icon: 'money' }
+        meta: { title: '工资明细', icon: 'money' }
       }
     ]
   },
 
   // ---------------------------------------------------------
-  {
-    path: '/role',
-    component: Layout,
-    name: 'role',
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/role'),
-        name: 'roleIndex',
-        meta: { title: '-------------', icon: 'el-icon-eleme' }
-      }
-    ]
-  },
-
-  {
-    path: '/test',
-    component: Layout,
-    name: 'test',
-    // meta: { roles: ['hr'] },
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/test/Test'),
-        name: 'testIndex',
-        meta: { title: '测试', icon: 'bug' }
-      }
-    ]
-  },
-
-  {
-    path: '/icon',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/icons/index'),
-        name: 'Icons',
-        meta: { title: 'Icons', icon: 'icon', noCache: true }
-      }
-    ]
-  },
+  // {
+  //   path: '/role',
+  //   component: Layout,
+  //   name: 'role',
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       component: () => import('@/views/role'),
+  //       name: 'roleIndex',
+  //       meta: { title: '-------------', icon: 'el-icon-eleme' }
+  //     }
+  //   ]
+  // },
+  //
+  // {
+  //   path: '/test',
+  //   component: Layout,
+  //   name: 'test',
+  //   // meta: { roles: ['hr'] },
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       component: () => import('@/views/test/Test'),
+  //       name: 'testIndex',
+  //       meta: { title: '测试', icon: 'bug' }
+  //     }
+  //   ]
+  // },
+  //
+  // {
+  //   path: '/icon',
+  //   component: Layout,
+  //   children: [
+  //     {
+  //       path: 'index',
+  //       component: () => import('@/views/icons/index'),
+  //       name: 'Icons',
+  //       meta: { title: 'Icons', icon: 'icon', noCache: true }
+  //     }
+  //   ]
+  // },
 
   /** when your routing map is too long, you can split it into small modules **/
   // tableRouter,

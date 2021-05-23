@@ -26,9 +26,6 @@ export default {
     ])
   },
   created() {
-    // if (!this.roles.includes('admin')) {
-    //   this.currentRole = 'editorDashboard'
-    // }
     if (this.roleType === 'admin') {
       this.currentRole = 'adminDashboard'
     } else if (this.roleType === 'hr') {
