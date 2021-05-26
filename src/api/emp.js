@@ -32,7 +32,7 @@ export function deleteEmp(pks) {
   })
 }
 
-export function updateEmp(emp) { // emp: 岗位
+export function updateEmp(emp) {
   return request({
     url: '/api/emp/update',
     method: 'post',

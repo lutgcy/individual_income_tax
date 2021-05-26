@@ -74,8 +74,7 @@ export default {
       })
     },
     close() {
-      this.$store.dispatch('tagsView/delView', this.$route)
-      this.$router.push({ path: '/index' })
+      this.$router.push({ path: '/dashboard' })
     }
   }
 }

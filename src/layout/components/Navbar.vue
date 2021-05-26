@@ -31,9 +31,9 @@
           <router-link to="/">
             <el-dropdown-item>Dashboard</el-dropdown-item>
           </router-link>
-<!--          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">-->
-<!--            <el-dropdown-item>Docs</el-dropdown-item>-->
-<!--          </a>-->
+          <!--          <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">-->
+          <!--            <el-dropdown-item>Docs</el-dropdown-item>-->
+          <!--          </a>-->
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">退出登录</span>
           </el-dropdown-item>
@@ -51,7 +51,7 @@ import ErrorLog from '@/components/ErrorLog'
 import Screenfull from '@/components/Screenfull'
 import SizeSelect from '@/components/SizeSelect'
 import Search from '@/components/HeaderSearch'
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie'
 
 export default {
   components: {
