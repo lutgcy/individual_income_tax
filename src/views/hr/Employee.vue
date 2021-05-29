@@ -530,7 +530,7 @@ import {
   searchEmployee,
   updateEmp
 } from '@/api/emp'
-import { resetEmpPassword, resetHrPassword } from '@/api/password'
+import { resetEmpPassword } from '@/api/password'
 
 export default {
   components: {},
